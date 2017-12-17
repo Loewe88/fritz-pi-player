@@ -1,0 +1,9 @@
+{{define "body"}}
+<div class="container">
+    <div class="row">
+    {{range $index, $results := .}}
+        <div class="blue lighten-5 col s6 m1 l1"><a href="/station/{{.Urlname}}"><!--<img src="http://tv.avm.de/tvapp/logos/hd/{{.Logoname}}.png"/><br />-->#{{$index}} {{.Name}}</a></div>
+    {{end}}
+    </div>
+</div>
+{{end}}
