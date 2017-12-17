@@ -1,7 +1,19 @@
 {{define "body"}}
+{{if .Streaming}}
+<div>
+    <b>Current Station: {{.CurrentStation.Name}}</b>
+</div>
+{{end}}
 <div class="container">
+    <h3>HD</h3>
     <div class="row">
-    {{range $index, $results := .}}
+    {{range $index, $results := .StationListHD}}
+        <div class="blue lighten-5 col s6 m1 l1"><a href="/station/{{.Urlname}}"><!--<img src="http://tv.avm.de/tvapp/logos/hd/{{.Logoname}}.png"/><br />-->#{{$index}} {{.Name}}</a></div>
+    {{end}}
+    </div>
+    <h3>SD</h3>
+    <div class="row">
+    {{range $index, $results := .StationListSD}}
         <div class="blue lighten-5 col s6 m1 l1"><a href="/station/{{.Urlname}}"><!--<img src="http://tv.avm.de/tvapp/logos/hd/{{.Logoname}}.png"/><br />-->#{{$index}} {{.Name}}</a></div>
     {{end}}
     </div>

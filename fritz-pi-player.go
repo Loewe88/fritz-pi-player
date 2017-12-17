@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-//	"io/ioutil"
 	"net/http"
-	"os"
 	"log"
 	"bufio"
 	"strings"
 	"html/template"
+	"os/exec"
+	"syscall"
+	"io"
 )
 
 type Station struct {
@@ -18,8 +19,19 @@ type Station struct {
 	Streamlink string
 }
 
+type templateData struct {
+	CurrentStation Station
+	StationListSD []Station
+	StationListHD []Station
+	Streaming bool
+}
+
 var stationList []Station
+var stationListSD []Station
+var stationListHD []Station
 var currentStation Station
+var streaming bool
+var omxplayerCmd *exec.Cmd
 
 func makeLogoname(name string) string {
 	logoname := makeUrlname(name)
@@ -42,17 +54,12 @@ func makeUrlname(name string) string {
 
 	return logoname
 }
-
-func readStationList(hostname string) {
-	file, err := os.Open("tvhd.m3u")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
+func readM3U(playlist io.Reader) []Station {
+	var parsedStations []Station
 
 	var parseStation Station
 
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(playlist)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, "#EXTINF") {
@@ -61,6 +68,7 @@ func readStationList(hostname string) {
 			parseStation.Urlname = makeUrlname(line[10:])
 		} else if strings.Contains(line, "rtsp://") {
 			parseStation.Streamlink = line
+			parsedStations = append(parsedStations, parseStation)
 			stationList = append(stationList, parseStation)
 		}
 	}
@@ -69,16 +77,66 @@ func readStationList(hostname string) {
 		log.Fatal(err)
 	}
 
+	return parsedStations
+}
+func readStationList(hostname string) {
+
+
+	response, e := http.Get("http://" + hostname + "/dvb/m3u/tvsd.m3u")
+	if e != nil {
+		log.Fatal(e)
+	}
+	defer response.Body.Close()
+
+	stationListSD = readM3U(response.Body)
+
+	response, e = http.Get("http://" + hostname + "/dvb/m3u/tvhd.m3u")
+	if e != nil {
+		log.Fatal(e)
+	}
+	defer response.Body.Close()
+
+	stationListHD = readM3U(response.Body)
+
+
+
+}
+
+func killStream() {
+	if streaming == true {
+		log.Printf("Killing stream of station '%s'", currentStation.Name)
+		syscall.Kill(-omxplayerCmd.Process.Pid, syscall.SIGKILL)
+		err := omxplayerCmd.Wait()
+		fmt.Println(err)
+
+		streaming = false
+	}
+}
+func startStream(station Station) {
+
+	killStream()
+
+	currentStation = station
+	streaming = true
+
+	omxplayerCmd = exec.Command("/usr/bin/omxplayer", "-o", "hdmi", station.Streamlink)
+	omxplayerCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	err := omxplayerCmd.Start()
+	log.Printf("Started stream of station '%s'", station.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func stationHandler(w http.ResponseWriter, r *http.Request) {
 	station := getStationForUrlname(r.URL.Path[9:])
-	t, _ := template.ParseFiles("ui/templates/base.html", "ui/templates/station.html")
-	t.ExecuteTemplate(w, "base", station)
+	go startStream(station)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func offHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Here I'm turning off the stream later :)")
+	killStream()
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func searchFritzHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +146,7 @@ func searchFritzHandler(w http.ResponseWriter, r *http.Request) {
 func listHandler(w http.ResponseWriter, r *http.Request) {
 
 	t, _ := template.ParseFiles("ui/templates/base.html", "ui/templates/stationlist.html")
-	t.ExecuteTemplate(w, "base", stationList)
+	t.ExecuteTemplate(w, "base", templateData{currentStation,stationListSD, stationListHD, streaming})
 }
 
 func getStationForUrlname(urlname string) Station {
