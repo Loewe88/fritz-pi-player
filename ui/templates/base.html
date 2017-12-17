@@ -17,19 +17,33 @@
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script type="text/javascript" src="/static/js/materialize.min.js"></script>
 
+
 <nav class="blue darken-1" role="navigation">
-    <div class="nav-wrapper container"><span class="brand-logo">Fritz Pi Player</span>
+    <div class="nav-wrapper container"><a href="#" class="brand-logo">Fritz Pi Player</a>
         <ul class="right hide-on-med-and-down">
-            <li><a href="#">Menu</a></li>
+            <li><a href="/list/sd/">SD stations</a></li>
+            <li><a href="/list/hd/">HD stations</a></li>
+            <li><a href="/list/all/">All stations</a></li>
+            <li><a href="/off/">Turn off</a></li>
         </ul>
 
         <ul id="nav-mobile" class="side-nav">
-            <li><a href="#">Menu</a></li>
+            <li><a href="/list/sd/">SD stations</a></li>
+            <li><a href="/list/hd/">HD stations</a></li>
+            <li><a href="/list/all/">All stations</a></li>
+            <li><a href="/off/">Turn off</a></li>
         </ul>
         <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
     </div>
 </nav>
 {{template "body" .}}
+<script type="text/javascript">
+    $('.button-collapse').sideNav({
+                closeOnClick: true, // Closes side-nav on <a> clicks, useful for Angular/Meteor
+                draggable: true, // Choose whether you can drag to open on touch screens,
+            }
+    );
+</script>
 </body>
 </html>
 {{end}}

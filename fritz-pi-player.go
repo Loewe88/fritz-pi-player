@@ -19,11 +19,13 @@ type Station struct {
 	Streamlink string
 }
 
-type templateData struct {
+type templateStationListData struct {
 	CurrentStation Station
 	StationListSD []Station
 	StationListHD []Station
 	Streaming bool
+	ShowHD bool
+	ShowSD bool
 }
 
 var stationList []Station
@@ -144,9 +146,26 @@ func searchFritzHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
+	var ShowHD, ShowSD bool
 
+	var req string
+
+	if len(r.URL.Path) > 8 {
+		req = r.URL.Path[:8]
+	}
+
+	if req == "/list/sd" {
+		ShowHD = false
+		ShowSD = true
+	} else if req == "/list/hd" {
+		ShowHD = true
+		ShowSD = false
+	} else {
+		ShowHD = true
+		ShowSD = true
+	}
 	t, _ := template.ParseFiles("ui/templates/base.html", "ui/templates/stationlist.html")
-	t.ExecuteTemplate(w, "base", templateData{currentStation,stationListSD, stationListHD, streaming})
+	t.ExecuteTemplate(w, "base", templateStationListData{currentStation,stationListSD, stationListHD, streaming, ShowHD, ShowSD})
 }
 
 func getStationForUrlname(urlname string) Station {
