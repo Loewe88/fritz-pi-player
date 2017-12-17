@@ -8,13 +8,13 @@
     <h3>HD</h3>
     <div class="row">
     {{range $index, $results := .StationListHD}}
-        <div class="blue lighten-5 col s6 m1 l1"><a href="/station/{{.Urlname}}"><!--<img src="http://tv.avm.de/tvapp/logos/hd/{{.Logoname}}.png"/><br />-->#{{$index}} {{.Name}}</a></div>
+        <div class="col s6 m4 l2"><span class="blue lighten-5 btn waves-effect station valign-wrapper center-align"><a href="/station/{{.Urlname}}"><img src="http://tv.avm.de/tvapp/logos/hd/{{.Logoname}}.png"/><br />#{{$index}} {{.Name}}</a></span></div>
     {{end}}
     </div>
     <h3>SD</h3>
     <div class="row">
     {{range $index, $results := .StationListSD}}
-        <div class="blue lighten-5 col s6 m1 l1"><a href="/station/{{.Urlname}}"><!--<img src="http://tv.avm.de/tvapp/logos/hd/{{.Logoname}}.png"/><br />-->#{{$index}} {{.Name}}</a></div>
+        <div class="col s6 m4 l2"><span class="blue lighten-5 btn waves-effect station valign-wrapper center-align"><a href="/station/{{.Urlname}}" style="vertical-align: center"><img src="http://tv.avm.de/tvapp/logos/{{.Logoname}}.png"/><br />{{.Name}}</a></span></div>
     {{end}}
     </div>
 </div>
