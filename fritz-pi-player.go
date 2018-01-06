@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"syscall"
 	"io"
+	"runtime"
+	"path"
 )
 
 type Station struct {
@@ -34,6 +36,18 @@ var stationListHD []Station
 var currentStation Station
 var streaming bool
 var omxplayerCmd *exec.Cmd
+
+func getFilenameWithPath(filename string) string {
+
+	_, execname, _, ok := runtime.Caller(1)
+	if ok == true {
+		filepath := path.Join(path.Dir(execname), filename)
+		return filepath
+	} else {
+		return filename
+	}
+
+}
 
 func makeLogoname(name string) string {
 	logoname := makeUrlname(name)
@@ -164,7 +178,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		ShowHD = true
 		ShowSD = true
 	}
-	t, _ := template.ParseFiles("ui/templates/base.html", "ui/templates/stationlist.html")
+	t, _ := template.ParseFiles(getFilenameWithPath("ui/templates/base.html"), getFilenameWithPath("ui/templates/stationlist.html"))
 	t.ExecuteTemplate(w, "base", templateStationListData{currentStation,stationListSD, stationListHD, streaming, ShowHD, ShowSD})
 }
 
@@ -179,7 +193,7 @@ func getStationForUrlname(urlname string) Station {
 }
 
 func main() {
-	fs := http.FileServer(http.Dir("ui/static"))
+	fs := http.FileServer(http.Dir(getFilenameWithPath("ui/static")))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	http.HandleFunc("/station/", stationHandler)
